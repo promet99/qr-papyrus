@@ -1,38 +1,4 @@
-/*
-Version 40M: 2334Byte (~2kb)
-Version 30M: 1370Byte (~2kb)
-A "Set" is a group of indexed QR codes that together holds a binary data.
-
-===Header===
-    ==Header For First Qr ==
-        [All] Protocol Name 3byte: QRP
-        Version 1byte: start from 0x00
-        Type 1byte (differ by Version): 
-            digit[1,2]: 0:text, 1:file
-            digit[3,4]: compress. (0: no compress, 1: lz-compress)
-            digit[5,6]: encrypt. (0: no encrypt, 1: encrypt)
-            digit[7,8]: ???
-        QR Count: 1byte (0~255)
-        
-        [All] Hash: 2byte (make sure qr codes are of same set)
-        [All] QR Index: 1byte (0~255)
-    
-===Content===
-    Max 2320~2330 (=2334-??)Byte
-        If File: 
-            - File name length 1Byte
-            - File name ??Byte (utf16?)
-            - File extension 4Byte char
-            - File content ??Byte
-
-- Hash: last N bytes of Sha3-256 
-
-
-*/
-import { createHash } from "sha256-uint8array";
-
-const FIRST_HEADER_SIZE = 9;
-const REST_HEADER_SIZE = 6;
+import { PROTOCOL_VER_1 } from "../constant/qrcode";
 
 const indexSet = ({ totalCount }: { totalCount: number }) => {
   const idxSet = {
@@ -68,25 +34,18 @@ const indexSet = ({ totalCount }: { totalCount: number }) => {
 
 export const unorderedQrDataArrProcessor = () => {
   const processor = {
-    isFirstFound: false,
     totalCount: 0,
     orderedDataArr: [] as Uint8Array[],
     countSet: undefined,
     process: (singleQr: Uint8Array) => {
-      const isFirst = new TextDecoder().decode(singleQr.slice(0, 3)) === "QRP";
-      if (isFirst) {
-        processor.isFirstFound = true;
+      if (processor.countSet === undefined) {
         processor.totalCount = singleQr[5];
-        processor.orderedDataArr[0] = singleQr;
-        processor.countSet = indexSet({ totalCount: processor.totalCount });
-        processor.orderedDataArr.map((_, i) => processor.countSet.add(i));
-      } else {
-        const index = singleQr[5];
-        processor.orderedDataArr[index] = singleQr;
-        if (processor.isFirstFound) {
-          processor.countSet.add(index);
-        }
+        processor.countSet = indexSet({ totalCount: singleQr[5] });
       }
+      const index = singleQr[8];
+      processor.orderedDataArr[index] = singleQr;
+      processor.countSet.add(index);
+
       return {
         isComplete: processor.countSet?.isComplete() || false,
         totalCount: processor.totalCount,
@@ -97,14 +56,6 @@ export const unorderedQrDataArrProcessor = () => {
   };
   return processor;
 };
-
-const QR_MAX_SIZE_BYTE_BY_VERSION = {
-  40: 2330,
-  30: 1370,
-  25: 996,
-};
-
-export type QrVersions = keyof typeof QR_MAX_SIZE_BYTE_BY_VERSION;
 
 export const decodeCompleteOrderedQrSet = ({
   dataArr,
@@ -124,29 +75,18 @@ export const decodeCompleteOrderedQrSet = ({
   const firstQrIndex = firstHeader[8];
   const isQrIndexCorrect = firstQrIndex === 0;
 
-  const decodeRestQrHeader = (restQrHeader: Uint8Array) => {
-    const isHeaderCorrect =
-      new TextDecoder().decode(restQrHeader.slice(0, 3)) === "QRP";
-    const hash = new TextDecoder().decode(restQrHeader.slice(3, 5));
-    const qrIndex = restQrHeader[5];
-    return { isHeaderCorrect, hash, qrIndex };
-  };
-
-  const FIRST_HEADER_SIZE = 9;
-  const REST_HEADER_SIZE = 6;
   if (dataType === "text") {
     if (dataArr.length < 2) {
-      const content = dataArr[0].slice(FIRST_HEADER_SIZE);
+      const content = dataArr[0].slice(PROTOCOL_VER_1.HEADER_SIZE);
       return {
         decodedResult: new TextDecoder().decode(content),
       };
     }
-    const concatedData = dataArr.reduce((acc, cur, i) => {
-      if (i === 0) {
-        return cur.slice(FIRST_HEADER_SIZE);
-      }
-      return new Uint8Array([...acc, ...cur.slice(REST_HEADER_SIZE)]);
-    }, new Uint8Array());
+    const concatedData = dataArr.reduce(
+      (acc, cur, i) =>
+        new Uint8Array([...acc, ...cur.slice(PROTOCOL_VER_1.HEADER_SIZE)]),
+      new Uint8Array()
+    );
 
     return {
       decodedResult: new TextDecoder().decode(concatedData),

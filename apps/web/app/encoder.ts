@@ -1,12 +1,14 @@
 /*
+PROTOCOL VER 0
+
 Version 40M: 2334Byte (~2kb)
 Version 30M: 1370Byte (~2kb)
 A "Set" is a group of indexed QR codes that together holds a binary data.
 
 ===Header===
     ==Header For First Qr ==
-        [All] Protocol Name 3byte: QRP for first, QRR for rest
-        Version 1byte: start from 0x00
+        [Protocol Ver Agnostic]Protocol Name 3byte: QRP
+        [Protocol Ver Agnostic] Version 1byte: start from 0x00
         Type 1byte (differ by Version): 
             digit[1,2]: 0:text, 1:file
             digit[3,4]: compress. (0: no compress, 1: lz-compress)
@@ -14,8 +16,8 @@ A "Set" is a group of indexed QR codes that together holds a binary data.
             digit[7,8]: ???
         QR Count: 1byte (0~255)
         
-        [All] Hash: 2byte (make sure qr codes are of same set)
-        [All] QR Index: 1byte (0~255)
+        Hash: 2byte (make sure qr codes are of same set)
+        QR Index: 1byte (0~255)
     
 ===Content===
     Max 2320~2330 (=2334-??)Byte
@@ -30,33 +32,30 @@ A "Set" is a group of indexed QR codes that together holds a binary data.
 
 */
 import { createHash } from "sha256-uint8array";
-
-const QR_MAX_SIZE_BYTE_BY_VERSION = {
-  40: 2330,
-  30: 1370,
-  25: 996,
-};
-
-export type QrVersions = keyof typeof QR_MAX_SIZE_BYTE_BY_VERSION;
+import {
+  PROTOCOL_VER_1,
+  QR_MAX_SIZE_BYTE_BY_VERSION,
+  QR_VERSIONS,
+} from "../constant/qrcode";
 
 export const encodeToDataArrForQr = (
   data:
     | {
         type: "text";
         content: string;
-        qrVersion: QrVersions;
+        qrVersion: QR_VERSIONS;
         //   encrypt?: boolean;
         //   compress?: boolean;
       }
     | {
         type: "file";
-        qrVersion: QrVersions;
+        qrVersion: QR_VERSIONS;
         content: Uint8Array;
         filename: string;
         extension: string;
       }
 ): {
-  qrVersion: QrVersions;
+  qrVersion: QR_VERSIONS;
   dataArr: Uint8Array[];
 } => {
   const qrMaxSizeByte = QR_MAX_SIZE_BYTE_BY_VERSION[data.qrVersion];
@@ -67,50 +66,42 @@ export const encodeToDataArrForQr = (
 
   //   FirstHeader.
   if (data.type === "text") {
-    const FIRST_HEADER_SIZE = 9;
-    const FIRST_QR_MAX_SIZE = qrMaxSizeByte - FIRST_HEADER_SIZE;
-    // length: 6
-    const REST_HEADER_SIZE = 6;
-    const REST_QR_MAX_SIZE = qrMaxSizeByte - REST_HEADER_SIZE;
+    const QR_MAX_SIZE = qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE;
 
     const encodedText = new TextEncoder().encode(data.content);
     const qrCount =
-      Math.ceil((encodedText.length - FIRST_QR_MAX_SIZE) / REST_QR_MAX_SIZE) +
-      1;
+      Math.ceil((encodedText.length - QR_MAX_SIZE) / QR_MAX_SIZE) + 1;
     const hash: Uint8Array = createHash()
       .update(encodedText)
       .digest()
       .slice(-2);
 
-    const firstHeader = new Uint8Array([
-      ...protocolName, // 0 1 2
-      protocolVersion, // 3
-      typeByte, // 4
-      qrCount, // 5
-      ...hash, // 6 7
-      0, // 8 (index)
-    ]);
-
-    const makeHeaderForRestQr = (index: number) =>
-      new Uint8Array([...new TextEncoder().encode("QRR"), ...hash, index]);
+    const qrHeader = (index: number) =>
+      new Uint8Array([
+        ...protocolName, // 0 1 2
+        protocolVersion, // 3
+        typeByte, // 4
+        qrCount, // 5
+        ...hash, // 6 7
+        index, // 8 (index)
+      ]);
 
     const firstQrData = new Uint8Array([
-      ...firstHeader,
-      ...encodedText.slice(0, FIRST_QR_MAX_SIZE),
+      ...qrHeader(0),
+      ...encodedText.slice(0, QR_MAX_SIZE),
     ]);
 
     if (qrCount > 1) {
-      const restData = encodedText.slice(qrMaxSizeByte - FIRST_HEADER_SIZE);
+      const leftDataSize = encodedText.slice(
+        qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE
+      );
       const restQrArr = new Array(qrCount - 1)
         .fill(null)
         .map(
           (_, i) =>
             new Uint8Array([
-              ...makeHeaderForRestQr(i + 1),
-              ...restData.slice(
-                i * REST_QR_MAX_SIZE,
-                (i + 1) * REST_QR_MAX_SIZE
-              ),
+              ...qrHeader(i + 1),
+              ...leftDataSize.slice(i * QR_MAX_SIZE, (i + 1) * QR_MAX_SIZE),
             ])
         );
 
@@ -119,7 +110,6 @@ export const encodeToDataArrForQr = (
         dataArr: [firstQrData, ...restQrArr],
       };
     } else {
-      //   One QR is enough.
       return {
         qrVersion: data.qrVersion,
         dataArr: [firstQrData],

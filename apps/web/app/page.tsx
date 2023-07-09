@@ -17,6 +17,8 @@ import {
   decodeCompleteOrderedQrSet,
   unorderedQrDataArrProcessor,
 } from "./decoder";
+import { mapArrToQrCodes } from "./qrcode";
+import { ImgSlide } from "./imgSlide";
 
 const styles = StyleSheet.create({
   page: { backgroundColor: "white", marginTop: 10, marginBottom: 10 },
@@ -42,9 +44,7 @@ const styles = StyleSheet.create({
 });
 
 export default function MainPage() {
-  const [src, setSrc] = useState("");
-  const [src2, setSrc2] = useState("");
-  const [src3, setSrc3] = useState("");
+  const [src, setSrc] = useState([]);
 
   const doc = (
     <Document>
@@ -54,59 +54,41 @@ export default function MainPage() {
             <Text>Section #1</Text>
           </View>
 
-          <Image src={src} style={styles.qrImgStyle} />
-          <Image src={src2} style={styles.qrImgStyle} />
-          <Image src={src} style={styles.qrImgStyle} />
-          <Image src={src2} style={styles.qrImgStyle} />
-          <Image src={src} style={styles.qrImgStyle} />
-          <Image src={src2} style={styles.qrImgStyle} />
-          <Image src={src} style={styles.qrImgStyle} />
-          <Image src={src2} style={styles.qrImgStyle} />
+          <Image src={src[0]} style={styles.qrImgStyle} />
         </View>
       </Page>
     </Document>
   );
 
   useEffect(() => {
-    const VERSION = 25;
+    const VERSION = 30;
 
     console.log(testQrData);
-    QRCode.toDataURL([{ data: testQrData.dataArr[0], mode: "byte" }], {
-      version: VERSION,
-      scale: 4,
-      type: "image/png",
-    }).then((url) => {
-      setSrc(url);
-    });
-    QRCode.toDataURL([{ data: testQrData.dataArr[1], mode: "byte" }], {
-      version: VERSION,
-      scale: 4,
-      type: "image/png",
-    }).then((url) => {
-      setSrc2(url);
-    });
-    QRCode.toDataURL([{ data: testQrData.dataArr[2], mode: "byte" }], {
-      version: VERSION,
-      scale: 4,
-      type: "image/png",
-    }).then((url) => {
-      setSrc3(url);
-    });
+    (async () => {
+      const { urls } = await mapArrToQrCodes({
+        dataArr: testQrData.dataArr,
+        qrVersion: VERSION,
+      });
+
+      setSrc(urls);
+    })();
+
     //
     // const code = jsQR(imageData, width, height, options);
   }, []);
 
   const [bb, setBb] = useState(unorderedQrDataArrProcessor());
-  //
 
   return (
     <>
       <Reader
-        delay={300}
+        delay={100}
         onError={(e) => {
           console.log(e);
         }}
+        style={{ width: 400, height: 400 }}
         onScan={(e) => {
+          if (e === null) return;
           console.log(e);
           if (e && (e.binaryData as number[])) {
             const aa = bb.process(new Uint8Array(e.binaryData));
@@ -119,36 +101,14 @@ export default function MainPage() {
             }
           }
         }}
-        style={{ width: "100%" }}
       />
       {/* <PDFViewer width={600} height={900}>
         {doc}
       </PDFViewer> */}
 
-      <img
-        src={src}
-        alt=""
-        style={{
-          width: 600,
-          height: 600,
-        }}
-      />
-      <img
-        src={src2}
-        alt=""
-        style={{
-          width: 600,
-          height: 600,
-        }}
-      />
-      <img
-        src={src3}
-        alt=""
-        style={{
-          width: 600,
-          height: 600,
-        }}
-      />
+      <div>
+        <ImgSlide srcArr={src} interval={500} />
+      </div>
     </>
   );
 }
