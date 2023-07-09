@@ -2,6 +2,7 @@ import { encodeToDataArrForQr } from "./encoder";
 
 export const testQrData = encodeToDataArrForQr({
   type: "text",
+  qrVersion: 25,
   content: `/*
 Version 40M: 2334Byte (~2kb)
 A "Set" is a group of indexed QR codes that together holds a binary data.

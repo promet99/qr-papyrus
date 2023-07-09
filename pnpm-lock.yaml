@@ -16,33 +16,9 @@ importers:
       prettier: 2.8.8
       turbo: 1.10.7
 
-  apps/docs:
-    specifiers:
-      '@types/node': ^17.0.12
-      '@types/react': ^18.0.22
-      '@types/react-dom': ^18.0.7
-      eslint-config-custom: workspace:*
-      next: ^13.4.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      tsconfig: workspace:*
-      typescript: ^4.5.3
-      ui: workspace:*
-    dependencies:
-      next: 13.4.1_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      ui: link:../../packages/ui
-    devDependencies:
-      '@types/node': 17.0.45
-      '@types/react': 18.2.5
-      '@types/react-dom': 18.2.3
-      eslint-config-custom: link:../../packages/eslint-config-custom
-      tsconfig: link:../../packages/tsconfig
-      typescript: 4.9.5
-
   apps/web:
     specifiers:
+      '@promet99/react-qr-reader-es6': 1.0.7
       '@react-pdf/renderer': ^3.1.12
       '@types/node': ^17.0.12
       '@types/react': ^18.0.22
@@ -57,6 +33,7 @@ importers:
       typescript: ^4.5.3
       ui: workspace:*
     dependencies:
+      '@promet99/react-qr-reader-es6': 1.0.7_biqbaboplfbrettd7655fr4n2y
       '@react-pdf/renderer': 3.1.12_react@18.2.0
       next: 13.4.1_biqbaboplfbrettd7655fr4n2y
       qrcode: 1.5.3
@@ -368,6 +345,17 @@ packages:
       open: 9.1.0
       picocolors: 1.0.0
       tslib: 2.5.0
+    dev: false
+
+  /@promet99/react-qr-reader-es6/1.0.7_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-F1baAYyrfsc1D1e9BFdJQOI/5kvnGaU0PSkheC5v2o2pcCCJcT8dWvXO2S+VRiU5qsNO/2laqZGYAy1+TvcFbA==}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+    dependencies:
+      jsqr-es6: 1.4.0-1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@react-pdf/fns/2.0.1:
@@ -2571,6 +2559,10 @@ packages:
       graceful-fs: 4.2.11
     dev: true
 
+  /jsqr-es6/1.4.0-1:
+    resolution: {integrity: sha512-LPWZJLI+3LLOy9k3/s/MeXlkfNOs3bYBX5O+fp4N0XuxbgO8H7Uc/nYZeNwo13nSZXRW9xWFKmZdy9591+PyAg==}
+    dev: false
+
   /jsx-ast-utils/3.3.3:
     resolution: {integrity: sha512-fYQHZTZ8jSfmWZ0iyzfwiU4WDX4HpHbMCZ3gPlWYiCl3BoeOTsqKBqnTVfH2rYT7eP5c3sVbeSPHnnJOaTrWiw==}
     engines: {node: '>=4.0'}
@@ -3612,6 +3604,7 @@ packages:
 
   /ts-node/10.9.1_t7dmilwzctzfywb3oy4dmby4b4:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
