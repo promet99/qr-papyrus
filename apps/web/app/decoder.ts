@@ -76,14 +76,8 @@ export const decodeCompleteOrderedQrSet = ({
   const isQrIndexCorrect = firstQrIndex === 0;
 
   if (dataType === "text") {
-    if (dataArr.length < 2) {
-      const content = dataArr[0].slice(PROTOCOL_VER_1.HEADER_SIZE);
-      return {
-        decodedResult: new TextDecoder().decode(content),
-      };
-    }
     const concatedData = dataArr.reduce(
-      (acc, cur, i) =>
+      (acc, cur) =>
         new Uint8Array([...acc, ...cur.slice(PROTOCOL_VER_1.HEADER_SIZE)]),
       new Uint8Array()
     );
@@ -92,8 +86,20 @@ export const decodeCompleteOrderedQrSet = ({
       decodedResult: new TextDecoder().decode(concatedData),
     };
   } else if (dataType === "file") {
+    const concatedData = dataArr.reduce(
+      (acc, cur) =>
+        new Uint8Array([...acc, ...cur.slice(PROTOCOL_VER_1.HEADER_SIZE)]),
+      new Uint8Array()
+    );
+    const fileNameLen = concatedData[0];
+
+    const fileName = new TextDecoder().decode(
+      concatedData.slice(1, fileNameLen + 1)
+    );
+    const fileContent = concatedData.slice(fileNameLen + 1);
+
     return {
-      decodedResult: new File([], "test"),
+      decodedResult: new File([fileContent], fileName),
     };
   }
 };

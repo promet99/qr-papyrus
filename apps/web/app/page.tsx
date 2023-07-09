@@ -11,7 +11,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { encodeToDataArrForQr } from "./encoder";
-import { testQrData } from "./testData";
+import { getTestImgData, testQrData } from "./testData";
 import { Reader } from "@promet99/react-qr-reader-es6";
 import {
   decodeCompleteOrderedQrSet,
@@ -19,6 +19,7 @@ import {
 } from "./decoder";
 import { mapArrToQrCodes } from "./qrcode";
 import { ImgSlide } from "./imgSlide";
+import { downloadFile } from "./file";
 
 const styles = StyleSheet.create({
   page: { backgroundColor: "white", marginTop: 10, marginBottom: 10 },
@@ -61,20 +62,26 @@ export default function MainPage() {
   );
 
   useEffect(() => {
+    (async () => {})();
     const VERSION = 30;
-
     console.log(testQrData);
     (async () => {
-      const { urls } = await mapArrToQrCodes({
-        dataArr: testQrData.dataArr,
-        qrVersion: VERSION,
+      const aa = await getTestImgData();
+      console.log({ aa });
+
+      const dd = encodeToDataArrForQr({
+        type: "file",
+        qrVersion: 30,
+        content: aa,
+        filename: "test.png",
       });
 
+      const { urls } = await mapArrToQrCodes({
+        dataArr: dd.dataArr,
+        qrVersion: VERSION,
+      });
       setSrc(urls);
     })();
-
-    //
-    // const code = jsQR(imageData, width, height, options);
   }, []);
 
   const [bb, setBb] = useState(unorderedQrDataArrProcessor());
@@ -98,6 +105,9 @@ export default function MainPage() {
                 dataArr: aa.orderedDataArr,
               });
               console.log({ cc });
+              if (typeof cc === "object") {
+                downloadFile(cc.decodedResult as File);
+              }
             }
           }
         }}

@@ -24,7 +24,6 @@ A "Set" is a group of indexed QR codes that together holds a binary data.
         If File: 
             - File name length 1Byte
             - File name ??Byte (utf16?)
-            - File extension 4Byte char
             - File content ??Byte
 
 - Hash: last N bytes of Sha3-256 
@@ -52,25 +51,24 @@ export const encodeToDataArrForQr = (
         qrVersion: QR_VERSIONS;
         content: Uint8Array;
         filename: string;
-        extension: string;
       }
 ): {
   qrVersion: QR_VERSIONS;
   dataArr: Uint8Array[];
 } => {
   const qrMaxSizeByte = QR_MAX_SIZE_BYTE_BY_VERSION[data.qrVersion];
+  const QR_MAX_CONTENT_SIZE = qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE;
 
   const protocolName = new TextEncoder().encode("QRP");
   const protocolVersion = 0;
   let typeByte = 0b00000000;
 
-  //   FirstHeader.
   if (data.type === "text") {
-    const QR_MAX_SIZE = qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE;
-
     const encodedText = new TextEncoder().encode(data.content);
     const qrCount =
-      Math.ceil((encodedText.length - QR_MAX_SIZE) / QR_MAX_SIZE) + 1;
+      Math.ceil(
+        (encodedText.length - QR_MAX_CONTENT_SIZE) / QR_MAX_CONTENT_SIZE
+      ) + 1;
     const hash: Uint8Array = createHash()
       .update(encodedText)
       .digest()
@@ -88,39 +86,83 @@ export const encodeToDataArrForQr = (
 
     const firstQrData = new Uint8Array([
       ...qrHeader(0),
-      ...encodedText.slice(0, QR_MAX_SIZE),
+      ...encodedText.slice(0, QR_MAX_CONTENT_SIZE),
     ]);
 
-    if (qrCount > 1) {
-      const leftDataSize = encodedText.slice(
-        qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE
+    const leftDataSize = encodedText.slice(QR_MAX_CONTENT_SIZE);
+    const restQrArr = new Array(qrCount - 1)
+      .fill(null)
+      .map(
+        (_, i) =>
+          new Uint8Array([
+            ...qrHeader(i + 1),
+            ...leftDataSize.slice(
+              i * QR_MAX_CONTENT_SIZE,
+              (i + 1) * QR_MAX_CONTENT_SIZE
+            ),
+          ])
       );
-      const restQrArr = new Array(qrCount - 1)
-        .fill(null)
-        .map(
-          (_, i) =>
-            new Uint8Array([
-              ...qrHeader(i + 1),
-              ...leftDataSize.slice(i * QR_MAX_SIZE, (i + 1) * QR_MAX_SIZE),
-            ])
-        );
-
-      return {
-        qrVersion: data.qrVersion,
-        dataArr: [firstQrData, ...restQrArr],
-      };
-    } else {
-      return {
-        qrVersion: data.qrVersion,
-        dataArr: [firstQrData],
-      };
-    }
-  } else if (data.type === "file") {
-    typeByte = typeByte & 0b01000000;
 
     return {
       qrVersion: data.qrVersion,
-      dataArr: [new Uint8Array([])],
+      dataArr: [firstQrData, ...restQrArr],
+    };
+  } else if (data.type === "file") {
+    typeByte = typeByte |= 0b01000000;
+
+    const encodedFilename = new TextEncoder().encode(data.filename);
+    const encodedFilenameLen = encodedFilename.length;
+    if (encodedFilenameLen > 255) {
+      throw new Error("Filename too long");
+    }
+
+    const encodedContent = new Uint8Array([
+      ...new Uint8Array([encodedFilenameLen]),
+      ...encodedFilename,
+      ...data.content,
+    ]);
+    const qrCount =
+      Math.ceil(
+        (encodedContent.length - QR_MAX_CONTENT_SIZE) / QR_MAX_CONTENT_SIZE
+      ) + 1;
+
+    const hash: Uint8Array = createHash()
+      .update(data.filename + encodedContent.length)
+      .digest()
+      .slice(-2);
+
+    const qrHeader = (index: number) =>
+      new Uint8Array([
+        ...protocolName, // 0 1 2
+        protocolVersion, // 3
+        typeByte, // 4
+        qrCount, // 5
+        ...hash, // 6 7
+        index, // 8 (index)
+      ]);
+
+    const firstQrData = new Uint8Array([
+      ...qrHeader(0),
+      ...encodedContent.slice(0, QR_MAX_CONTENT_SIZE),
+    ]);
+
+    const leftDataSize = encodedContent.slice(QR_MAX_CONTENT_SIZE);
+    const restQrArr = new Array(qrCount - 1)
+      .fill(null)
+      .map(
+        (_, i) =>
+          new Uint8Array([
+            ...qrHeader(i + 1),
+            ...leftDataSize.slice(
+              i * QR_MAX_CONTENT_SIZE,
+              (i + 1) * QR_MAX_CONTENT_SIZE
+            ),
+          ])
+      );
+
+    return {
+      qrVersion: data.qrVersion,
+      dataArr: [firstQrData, ...restQrArr],
     };
   }
 };
