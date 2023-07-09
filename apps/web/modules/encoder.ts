@@ -35,28 +35,31 @@ import {
   PROTOCOL_VER_1,
   QR_MAX_SIZE_BYTE_BY_VERSION,
   QR_VERSIONS,
-} from "../constant/qrcode";
+} from "./constant/qrcode";
 
 export const encodeToDataArrForQr = (
   data:
     | {
         type: "text";
-        content: string;
         qrVersion: QR_VERSIONS;
+        errorCorrectionLevel;
         //   encrypt?: boolean;
         //   compress?: boolean;
+        content: string;
       }
     | {
         type: "file";
         qrVersion: QR_VERSIONS;
-        content: Uint8Array;
+        errorCorrectionLevel: "L" | "M";
         filename: string;
+        content: Uint8Array;
       }
 ): {
   qrVersion: QR_VERSIONS;
   dataArr: Uint8Array[];
 } => {
-  const qrMaxSizeByte = QR_MAX_SIZE_BYTE_BY_VERSION[data.qrVersion];
+  const qrMaxSizeByte =
+    QR_MAX_SIZE_BYTE_BY_VERSION[data.qrVersion][data.errorCorrectionLevel];
   const QR_MAX_CONTENT_SIZE = qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE;
 
   const protocolName = new TextEncoder().encode("QRP");

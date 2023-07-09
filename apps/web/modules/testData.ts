@@ -4,6 +4,7 @@ import testImg from "../asset/testImg.png";
 export const testQrData = encodeToDataArrForQr({
   type: "text",
   qrVersion: 25,
+  errorCorrectionLevel: "L",
   content: `
   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam luctus ultricies ante, quis congue lorem lacinia vitae. Ut arcu augue, imperdiet nec erat vitae, porttitor sodales quam. Suspendisse convallis lectus et nunc ultrices faucibus. Suspendisse ultrices vitae lacus vel tristique. Quisque a justo ex. Proin sit amet semper turpis. Pellentesque tempus malesuada laoreet. Vestibulum tristique, urna ut maximus laoreet, tellus ligula porta sem, at pulvinar lacus mi et nisl. Aenean vel ante auctor, scelerisque risus ac, dapibus ex. Pellentesque aliquet ultricies orci, vel hendrerit enim faucibus nec. Aenean porta mauris vitae augue fringilla, id pellentesque nisi iaculis. Cras mi elit, vehicula vel mollis sed, tincidunt eget est. Ut ac bibendum nunc. Sed porttitor arcu id vestibulum ultricies. Nulla sed varius mi. Aliquam pulvinar ac tellus sed mollis.
 
@@ -24,8 +25,7 @@ export const testQrData = encodeToDataArrForQr({
   `,
 });
 
-// testImg
-
+// test image
 const getFileFromUrl = async (url, name, defaultType = "image/png") => {
   const response = await fetch(url);
   const data = await response.blob();

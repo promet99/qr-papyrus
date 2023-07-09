@@ -1,4 +1,4 @@
-import { PROTOCOL_VER_1 } from "../constant/qrcode";
+import { PROTOCOL_VER_1 } from "./constant/qrcode";
 
 const indexSet = ({ totalCount }: { totalCount: number }) => {
   const idxSet = {
