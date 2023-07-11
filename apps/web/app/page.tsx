@@ -43,6 +43,9 @@ export default function MainPage() {
   const [bb, setBb] = useState(unorderedQrDataArrProcessor());
 
   const [encodingStatusArr, setEncodingStatusArr] = useState([false]);
+  const [highlightIndex, setHighlightIndex] = useState<undefined | number>(
+    undefined
+  );
   return (
     <>
       <Reader
@@ -56,6 +59,7 @@ export default function MainPage() {
           if (e && (e.binaryData as number[])) {
             const aa = bb.process(new Uint8Array(e.binaryData));
             setEncodingStatusArr(bb.countSet?.getStatusByIndex() || []);
+            setHighlightIndex(aa.currentIndex);
             if (aa.isComplete) {
               const cc = decodeCompleteOrderedQrSet({
                 dataArr: aa.orderedDataArr,
@@ -68,7 +72,10 @@ export default function MainPage() {
           }
         }}
       />
-      <StatusBlockBar dataStatusArr={encodingStatusArr} />
+      <StatusBlockBar
+        dataStatusArr={encodingStatusArr}
+        highlightIndex={highlightIndex}
+      />
 
       <div>
         <ImgSlide srcArr={src} interval={500} />

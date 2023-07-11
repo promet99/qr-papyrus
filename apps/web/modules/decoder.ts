@@ -54,6 +54,7 @@ export const unorderedQrDataArrProcessor = () => {
         totalCount: processor.totalCount,
         missingIdx: processor.countSet?.missingIndexes() || [],
         orderedDataArr: processor.orderedDataArr,
+        currentIndex: index,
       };
     },
   };
