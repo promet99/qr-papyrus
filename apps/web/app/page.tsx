@@ -12,13 +12,14 @@ import {
 import { mapArrToQrCodes } from "../modules/qrcode";
 import { ImgSlide } from "../modules/imgSlide";
 import { downloadFile } from "../modules/file";
+import { StatusBlockBar } from "../component/StatusBlockBar";
 
+const VERSION = 25;
 export default function MainPage() {
   const [src, setSrc] = useState([]);
 
   useEffect(() => {
     (async () => {})();
-    const VERSION = 25;
     console.log(testQrData);
     (async () => {
       const aa = await getTestImgData();
@@ -41,20 +42,20 @@ export default function MainPage() {
 
   const [bb, setBb] = useState(unorderedQrDataArrProcessor());
 
+  const [encodingStatusArr, setEncodingStatusArr] = useState([false]);
   return (
     <>
       <Reader
         delay={100}
-        onError={(e) => {
-          console.log(e);
-        }}
+        // onError={(e) => {
+        //   console.log(e);
+        // }}
         style={{ width: 400, height: 400 }}
         onScan={(e) => {
           if (e === null) return;
-          console.log(e);
           if (e && (e.binaryData as number[])) {
             const aa = bb.process(new Uint8Array(e.binaryData));
-            console.log(aa);
+            setEncodingStatusArr(bb.countSet?.getStatusByIndex() || []);
             if (aa.isComplete) {
               const cc = decodeCompleteOrderedQrSet({
                 dataArr: aa.orderedDataArr,
@@ -67,6 +68,7 @@ export default function MainPage() {
           }
         }}
       />
+      <StatusBlockBar dataStatusArr={encodingStatusArr} />
 
       <div>
         <ImgSlide srcArr={src} interval={500} />

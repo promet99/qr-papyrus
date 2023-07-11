@@ -28,6 +28,9 @@ const indexSet = ({ totalCount }: { totalCount: number }) => {
         .fill(null)
         .map((_, i) => (idxSet._data[i] === true ? null : i))
         .filter((v) => v !== null),
+    getStatusByIndex: () =>
+      new Array(totalCount).fill(null).map((_, i) => idxSet._data[i] === true),
+    getCurrentCount: () => Object.keys(idxSet._data).length,
   };
   return idxSet;
 };

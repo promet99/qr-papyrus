@@ -15,8 +15,8 @@
     "qrcode": "^1.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sha256-uint8array": "^0.10.5",
-    "ui": "workspace:*"
+    "recharts": "^2.7.2",
+    "sha256-uint8array": "^0.10.5"
   },
   "devDependencies": {
     "@types/node": "^17.0.12",
