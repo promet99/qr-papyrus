@@ -37,6 +37,21 @@ import {
   QR_VERSIONS,
 } from "./constant/qrcode";
 
+export const fileToUint8Arr = (inputFile: File): Promise<Uint8Array> => {
+  const reader = new FileReader();
+  return new Promise((resolve) => {
+    reader.readAsArrayBuffer(inputFile);
+    reader.onloadend = (e) => {
+      resolve(new Uint8Array(reader.result as ArrayBuffer));
+    };
+  });
+};
+
+export interface EncodedQrData {
+  qrVersion: QR_VERSIONS;
+  dataArr: Uint8Array[];
+}
+
 export const encodeToDataArrForQr = (
   data:
     | {
@@ -54,10 +69,7 @@ export const encodeToDataArrForQr = (
         filename: string;
         content: Uint8Array;
       }
-): {
-  qrVersion: QR_VERSIONS;
-  dataArr: Uint8Array[];
-} => {
+): EncodedQrData => {
   const qrMaxSizeByte =
     QR_MAX_SIZE_BYTE_BY_VERSION[data.qrVersion][data.errorCorrectionLevel];
   const QR_MAX_CONTENT_SIZE = qrMaxSizeByte - PROTOCOL_VER_1.HEADER_SIZE;

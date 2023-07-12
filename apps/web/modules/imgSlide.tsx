@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 export const ImgSlide = ({
   srcArr,
   interval = 500,
+  size = 400,
 }: {
   srcArr: string[];
   interval: number;
+  size: number;
 }) => {
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -16,13 +18,22 @@ export const ImgSlide = ({
   }, [srcArr]);
 
   return (
-    <img
-      src={srcArr[i]}
-      alt=""
-      style={{
-        width: 600,
-        height: 600,
-      }}
-    />
+    <div>
+      <img
+        src={srcArr[i]}
+        alt=""
+        style={{
+          width: size,
+          height: size,
+        }}
+      />
+      <div
+        style={{
+          width: size,
+        }}
+      >
+        {i + 1}/{srcArr.length}
+      </div>
+    </div>
   );
 };

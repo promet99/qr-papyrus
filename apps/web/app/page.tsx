@@ -50,9 +50,6 @@ export default function MainPage() {
     <>
       <Reader
         delay={100}
-        // onError={(e) => {
-        //   console.log(e);
-        // }}
         style={{ width: 400, height: 400 }}
         onScan={(e) => {
           if (e === null) return;
@@ -78,7 +75,7 @@ export default function MainPage() {
       />
 
       <div>
-        <ImgSlide srcArr={src} interval={500} />
+        <ImgSlide srcArr={src} interval={500} size={0} />
       </div>
     </>
   );

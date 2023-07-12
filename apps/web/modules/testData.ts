@@ -1,4 +1,4 @@
-import { encodeToDataArrForQr } from "./encoder";
+import { encodeToDataArrForQr, fileToUint8Arr } from "./encoder";
 import testImg from "../asset/testImg.png";
 
 export const testQrData = encodeToDataArrForQr({
@@ -36,11 +36,5 @@ const getFileFromUrl = async (url, name, defaultType = "image/png") => {
 
 export const getTestImgData = async (): Promise<Uint8Array> => {
   const aa = await getFileFromUrl(testImg.src, "test.png");
-  const reader = new FileReader();
-  return new Promise((resolve) => {
-    reader.readAsArrayBuffer(aa);
-    reader.onloadend = (e) => {
-      resolve(new Uint8Array(reader.result as ArrayBuffer));
-    };
-  });
+  return fileToUint8Arr(aa);
 };
