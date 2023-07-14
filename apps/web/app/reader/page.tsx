@@ -18,7 +18,10 @@ export default function MainPage() {
     undefined
   );
 
-  const goodWidth = Math.min(window.screen.width - 20, 600);
+  const goodWidth = Math.min(
+    typeof window !== "undefined" ? window.screen.width - 20 : undefined,
+    600
+  );
 
   const [scanStatus, setScanStatus] = useState<
     "notStarted" | "onGoing" | "complete"
@@ -29,6 +32,11 @@ export default function MainPage() {
     data: undefined | string | File;
   }>({ type: undefined, data: undefined });
 
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <div
       style={{
@@ -37,37 +45,43 @@ export default function MainPage() {
         alignItems: "center",
       }}
     >
-      <Reader
-        delay={100}
-        style={{ width: goodWidth, height: goodWidth }}
-        onScan={(e) => {
-          if (e === null) return;
-          if (e && (e.binaryData as number[])) {
-            const aa = bb.current.process(new Uint8Array(e.binaryData));
-            setEncodingStatusArr(bb.current.countSet?.getStatusByIndex() || []);
-            setHighlightIndex(aa.currentIndex);
-            if (aa.isComplete) {
-              const cc = decodeCompleteOrderedQrSet({
-                dataArr: aa.orderedDataArr,
-              });
-              console.log({ cc });
+      {isClient && (
+        <Reader
+          delay={100}
+          style={{ width: goodWidth, height: goodWidth }}
+          onScan={(e) => {
+            if (e === null) return;
+            if (e && (e.binaryData as number[])) {
+              const aa = bb.current.process(new Uint8Array(e.binaryData));
+              setEncodingStatusArr(
+                bb.current.countSet?.getStatusByIndex() || []
+              );
+              setHighlightIndex(aa.currentIndex);
+              if (aa.isComplete) {
+                const cc = decodeCompleteOrderedQrSet({
+                  dataArr: aa.orderedDataArr,
+                });
+                console.log({ cc });
 
-              setScanResult({
-                type: typeof cc === "string" ? "text" : "file",
-                data: cc.decodedResult as File,
-              });
-              setScanStatus("complete");
-            } else {
-              setScanStatus("onGoing");
+                setScanResult({
+                  type: typeof cc === "string" ? "text" : "file",
+                  data: cc.decodedResult as File,
+                });
+                setScanStatus("complete");
+              } else {
+                setScanStatus("onGoing");
+              }
             }
-          }
-        }}
-      />
-      <StatusBlockBar
-        width={goodWidth}
-        dataStatusArr={encodingStatusArr}
-        highlightIndex={highlightIndex}
-      />
+          }}
+        />
+      )}
+      {isClient && (
+        <StatusBlockBar
+          width={goodWidth}
+          dataStatusArr={encodingStatusArr}
+          highlightIndex={highlightIndex}
+        />
+      )}
       <div
         style={{
           width: goodWidth,

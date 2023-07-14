@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  EncodedQrData,
-  encodeToDataArrForQr,
-  fileToUint8Arr,
-} from "../../modules/encoder";
+import { encodeToDataArrForQr, fileToUint8Arr } from "../../modules/encoder";
 
 import { mapArrToQrCodes } from "../../modules/qrcode";
 import { ImgSlide } from "../../modules/imgSlide";
@@ -22,7 +18,10 @@ export default function MainPage() {
 
   const [src, setSrc] = useState([]);
 
-  const goodWidth = Math.min(window.screen.width - 20, 600);
+  const goodWidth = Math.min(
+    typeof window !== "undefined" ? window.screen.width - 20 : undefined,
+    600
+  );
 
   return (
     <div
